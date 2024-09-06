@@ -1,4 +1,4 @@
-import { model, Schema } from "mongoose";
+import { model, Schema } from 'mongoose';
 
 export interface IFilm {
   title: string;
@@ -15,14 +15,14 @@ const filmSchema = new Schema<IFilm>({
   },
   genre: {
     type: String,
-    enum: ["комедия", "драма", "боевик", "триллер", "документальный"],
+    enum: ['комедия', 'драма', 'боевик', 'триллер', 'документальный'],
     required: true,
   },
   director: {
     type: Schema.Types.ObjectId,
-    ref: "director",
+    ref: 'director',
     required: true,
   },
 });
 
-export default model<IFilm>("Film", filmSchema);
+export default model<IFilm>('Film', filmSchema);

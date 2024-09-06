@@ -1,4 +1,4 @@
-import { model, Schema } from "mongoose";
+import { model, Schema } from 'mongoose';
 
 interface IDirector {
   name: string;
@@ -11,4 +11,4 @@ const directorSchema = new Schema<IDirector>({
   },
 });
 
-export default model<IDirector>("director", directorSchema);
+export default model<IDirector>('director', directorSchema);

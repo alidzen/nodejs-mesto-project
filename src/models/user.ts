@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema } from 'mongoose';
 
 const userSchema = new Schema({
   email: {
@@ -16,4 +16,4 @@ const userSchema = new Schema({
   },
 });
 // Описываем модель. Первый параметр - имя коллекции БД, второй - схема данных
-export default mongoose.model("user", userSchema);
+export default mongoose.model('user', userSchema);

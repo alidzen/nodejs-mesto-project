@@ -1,7 +1,7 @@
 // middlewares/logger.ts
 
-import winston from "winston";
-import expressWinston from "express-winston";
+import winston from 'winston';
+import expressWinston from 'express-winston';
 
 // создадим логер запросов
 export const requestLogger = expressWinston.logger({
@@ -10,7 +10,7 @@ export const requestLogger = expressWinston.logger({
       format: winston.format.simple(),
     }),
     new winston.transports.File({
-      filename: "request.log",
+      filename: 'request.log',
     }),
   ],
   format: winston.format.json(),
@@ -18,6 +18,6 @@ export const requestLogger = expressWinston.logger({
 
 export const errorLogger = expressWinston.logger({
   levels: winston.config.npm.levels,
-  transports: [new winston.transports.File({ filename: "error.log" })],
+  transports: [new winston.transports.File({ filename: 'error.log' })],
   format: winston.format.json(),
 });
