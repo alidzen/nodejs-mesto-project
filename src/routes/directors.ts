@@ -1,4 +1,4 @@
-import { createDirector, getDirectors } from "controllers/director";
+import { createDirector, getDirectors } from "../controllers/director";
 import { Router } from "express";
 
 const router = Router();

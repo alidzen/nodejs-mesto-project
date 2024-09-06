@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 import cookerParser from "cookie-parser";
 import filmsRouter from "./routes/films";
 import directorsRouter from "./routes/directors";
-import { requestLogger, errorLogger } from "middlewares/logger";
+import { requestLogger, errorLogger } from "./middlewares/logger";
 import dotenv from "dotenv";
 import helmet from "helmet";
 
