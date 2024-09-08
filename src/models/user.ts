@@ -1,19 +1,28 @@
 import mongoose, { Schema } from 'mongoose';
 
 const userSchema = new Schema({
-  email: {
+  name: {
     type: String,
-    // поле обязательно для заполнения, иначе
-    // будет выброшена ошибка
+    minlength: 2,
+    maxlength: 30,
     required: true,
-    // значение поля должно быть уникально в рамках коллекции,
-    // создать двух пользователей с одинковым email не выйдет
-    unique: true,
   },
-  password: {
+  about: {
+    type: String,
+    minlength: 2,
+    maxlength: 200,
+    required: true,
+  },
+  // email: {
+  //   type: String,
+  //   required: true,
+  //   // значение поля должно быть уникально в рамках коллекции,
+  //   // создать двух пользователей с одинковым email не выйдет
+  //   unique: true,
+  // },
+  avatar: {
     type: String,
     required: true,
   },
 });
-// Описываем модель. Первый параметр - имя коллекции БД, второй - схема данных
 export default mongoose.model('user', userSchema);
