@@ -8,6 +8,7 @@ import dotenv from 'dotenv';
 import usersRouter from './routes/users';
 import cardsRouter from './routes/cards';
 import { requestLogger, errorLogger } from './middlewares/logger';
+import handleUnhanledRequests from './middlewares/not-found';
 
 dotenv.config();
 
@@ -23,7 +24,6 @@ mongoose.connect(DB_URL);
 
 app.use(requestLogger);
 app.use((req: Request, res: Response, next: NextFunction) => {
-  // @ts-ignore
   req.user = {
     _id: '66dd5e34acdb9b0d445f85b9',
   };
@@ -34,13 +34,13 @@ app.use('/users', usersRouter);
 app.use('/cards', cardsRouter);
 
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(handleUnhanledRequests);
 
 app.use(errorLogger);
 app.use(errors());
 
+
 app.use(
-  // @ts-ignore eslint-disable-next-line no-unused-vars
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   (err: Error & { statusCode: number }, req: Request, res: Response, _next: NextFunction) => {
     const { statusCode = 500, message } = err;
     res

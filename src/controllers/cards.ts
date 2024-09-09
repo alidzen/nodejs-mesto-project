@@ -3,8 +3,6 @@ import Card from '../models/card';
 import { BadRequestError, NotFoundError } from '../errors';
 
 export const createCard = (req: Request, res: Response, next: NextFunction) => {
-  // TODO: remove hardcoded user
-  // @ts-ignore
   const id = req.user._id;
   const { name, link } = req.body;
   if (!name || !link || !id) {
@@ -44,8 +42,6 @@ export const likeCard = (req: Request, res: Response, next: NextFunction) => {
   }
   Card.findByIdAndUpdate(
     cardId,
-    // TODO: remove hardcoded user
-    // @ts-ignore
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
@@ -66,8 +62,6 @@ export const dislikeCard = (req: Request, res: Response, next: NextFunction) => 
   Card
     .findByIdAndUpdate(
       cardId,
-      // TODO: remove hardcoded user
-      // @ts-ignore
       { $pull: { likes: req.user._id } }, // убрать _id из массива
       { new: true },
     )

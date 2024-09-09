@@ -37,8 +37,6 @@ export const getUser = (req: Request, res: Response, next: NextFunction) => {
 };
 
 export const updateProfile = (req: Request, res: Response, next: NextFunction) => {
-  // TODO: remove hardcoded user
-  // @ts-ignore
   const id = req.user._id;
   const { name, about } = req.body;
   if (!name || !about) {
@@ -54,8 +52,6 @@ export const updateProfile = (req: Request, res: Response, next: NextFunction) =
 };
 
 export const updateAvatar = (req: Request, res: Response, next: NextFunction) => {
-  // TODO: remove hardcoded user
-  // @ts-ignore
   const id = req.user._id;
   const { avatar } = req.body;
 

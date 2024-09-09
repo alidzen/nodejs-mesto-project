@@ -13,13 +13,6 @@ const userSchema = new Schema({
     maxlength: 200,
     required: true,
   },
-  // email: {
-  //   type: String,
-  //   required: true,
-  //   // значение поля должно быть уникально в рамках коллекции,
-  //   // создать двух пользователей с одинковым email не выйдет
-  //   unique: true,
-  // },
   avatar: {
     type: String,
     required: true,
