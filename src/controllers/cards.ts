@@ -3,8 +3,14 @@ import Card from '../models/card';
 import { BadRequestError, NotFoundError } from '../errors';
 
 export const createCard = (req: Request, res: Response, next: NextFunction) => {
-  const { id, name } = req.params;
-  Card.create({ id, name })
+  // TODO: remove hardcoded user
+  // @ts-ignore
+  const id = req.user._id;
+  const { name, link } = req.body;
+  if (!name || !link || !id) {
+    throw new BadRequestError('Переданы некорректные данные при создании карточки.');
+  }
+  Card.create({ owner: id, name, link })
     .then((user) => res.send(user))
     .catch(next);
 };
@@ -20,6 +26,9 @@ export const getCards = (_req: Request, res: Response, next: NextFunction) => {
 
 export const deleteCard = (req: Request, res: Response, next: NextFunction) => {
   const { cardId } = req.params;
+  if (!cardId) {
+    throw new BadRequestError('Карточка с указанным _id не найдена.');
+  }
   Card
     .deleteOne({ _id: cardId })
     .then((card) => {
@@ -31,10 +40,11 @@ export const deleteCard = (req: Request, res: Response, next: NextFunction) => {
 export const likeCard = (req: Request, res: Response, next: NextFunction) => {
   const { cardId } = req.params;
   if (!cardId) {
-    next(new BadRequestError('Отсутствует параметр cardId'));
+    next(new BadRequestError('Переданы некорректные данные для постановки лайка.'));
   }
   Card.findByIdAndUpdate(
     cardId,
+    // TODO: remove hardcoded user
     // @ts-ignore
     { $addToSet: { likes: req.user._id } },
     { new: true },
@@ -51,18 +61,19 @@ export const likeCard = (req: Request, res: Response, next: NextFunction) => {
 export const dislikeCard = (req: Request, res: Response, next: NextFunction) => {
   const { cardId } = req.params;
   if (!cardId) {
-    next(new BadRequestError('Отсутствует параметр cardId'));
+    next(new BadRequestError('Переданы некорректные данные для снятии лайка.'));
   }
   Card
     .findByIdAndUpdate(
       cardId,
+      // TODO: remove hardcoded user
       // @ts-ignore
       { $pull: { likes: req.user._id } }, // убрать _id из массива
       { new: true },
     )
     .then((card) => {
       if (!card) {
-        throw new NotFoundError('Невозможно удалить. Карточка с таким id не найдена');
+        throw new NotFoundError('Передан несуществующий _id карточки.');
       }
       res.send({ data: card });
     }).catch(next);

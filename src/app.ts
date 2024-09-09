@@ -38,14 +38,23 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(errorLogger);
 app.use(errors());
 
-app.use((err: any, _req: Request, res: Response) => {
-  const { statusCode = 500, message } = err;
+app.use(
+  // @ts-ignore eslint-disable-next-line no-unused-vars
+  (err: Error & { statusCode: number }, req: Request, res: Response, next: NextFunction) => {
+    const { statusCode = 500, message } = err;
+    console.error('err', message);
 
-  res.status(statusCode).send({
-    message: statusCode === 500 ? 'На сервере произошла ошибка' : message,
-  });
-});
+    res
+      .status(statusCode)
+      .send({
+        // проверяем статус и выставляем сообщение в зависимости от него
+        message: statusCode === 500
+          ? 'На сервере произошла ошибка'
+          : message,
+      });
+  },
+);
 
 app.listen(PORT, () => {
-  console.log('Ссылка на сервер');
+  console.log(`Listen: ${PORT}`);
 });

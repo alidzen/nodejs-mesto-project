@@ -4,11 +4,11 @@ import { BadRequestError, NotFoundError } from '../errors';
 
 export const createUser = (req: Request, res: Response, next: NextFunction) => {
   const { name, about, avatar } = req.body;
+  if (!name || !about || !avatar) {
+    next(new BadRequestError('Переданы некорректные данные при создании пользователя.'));
+  }
   User.create({ name, about, avatar })
     .then((user) => {
-      if (!user) {
-        throw new BadRequestError('Не удалось создать пользователя');
-      }
       res.send(user);
     })
     .catch(next);
@@ -26,45 +26,49 @@ export const getUsers = (_req: Request, res: Response, next: NextFunction) => {
 export const getUser = (req: Request, res: Response, next: NextFunction) => {
   const { id } = req.params;
   User
-    .findById(id)
+    .findOne({ _id: id })
     .then((user) => {
       if (!user) {
-        throw new NotFoundError('Пользователь с таким id не найден');
+        throw new NotFoundError('Пользователь по указанному _id не найден.');
       }
       res.send({ data: user });
     })
     .catch(next);
 };
 
-type params = {
-  name?: string;
-  about?: string;
-}
-
 export const updateProfile = (req: Request, res: Response, next: NextFunction) => {
-  const { id } = req.params;
+  // TODO: remove hardcoded user
+  // @ts-ignore
+  const id = req.user._id;
   const { name, about } = req.body;
-  const fields: params = {};
-  if (name) {
-    fields.name = name;
+  if (!name || !about) {
+    next(new BadRequestError('Переданы некорректные данные при обновлении профиля.'));
   }
 
-  if (about) {
-    fields.about = about;
-  }
-
-  return User.findByIdAndUpdate(id, { ...fields }).then((user) => {
+  return User.findOneAndUpdate({ _id: id }, { name, about }, { new: true }).then((user) => {
+    if (!user) {
+      throw new NotFoundError('Пользователь с указанным _id не найден.');
+    }
     res.send({ data: user });
   }).catch(next);
 };
 
 export const updateAvatar = (req: Request, res: Response, next: NextFunction) => {
-  const { id } = req.params;
+  // TODO: remove hardcoded user
+  // @ts-ignore
+  const id = req.user._id;
   const { avatar } = req.body;
 
   if (!avatar) {
-    next(new BadRequestError('Пустое или невалидное значение поля avatar'));
+    next(new BadRequestError('Переданы некорректные данные при обновлении аватара.'));
   }
 
-  return User.findByIdAndUpdate(id, { avatar }).then((user) => res.send({ data: user }));
+  return User
+    .findOneAndUpdate({ _id: id }, { avatar }, { new: true })
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError('Пользователь с указанным _id не найден.');
+      }
+      res.send({ data: user });
+    });
 };

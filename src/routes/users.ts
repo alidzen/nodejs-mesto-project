@@ -9,6 +9,6 @@ router.get('/', getUsers);
 router.post('/', createUser);
 router.get('/:id', getUser);
 router.patch('/me', updateProfile);
-router.patch('/me/avatat', updateAvatar);
+router.patch('/me/avatar', updateAvatar);
 
 export default router;
