@@ -40,14 +40,12 @@ app.use(errors());
 
 app.use(
   // @ts-ignore eslint-disable-next-line no-unused-vars
-  (err: Error & { statusCode: number }, req: Request, res: Response, next: NextFunction) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  (err: Error & { statusCode: number }, req: Request, res: Response, _next: NextFunction) => {
     const { statusCode = 500, message } = err;
-    console.error('err', message);
-
     res
       .status(statusCode)
       .send({
-        // проверяем статус и выставляем сообщение в зависимости от него
         message: statusCode === 500
           ? 'На сервере произошла ошибка'
           : message,
