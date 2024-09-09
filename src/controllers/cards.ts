@@ -9,7 +9,7 @@ export const createCard = (req: Request, res: Response, next: NextFunction) => {
     throw new BadRequestError('Переданы некорректные данные при создании карточки.');
   }
   Card.create({ owner: id, name, link })
-    .then((user) => res.send(user))
+    .then((user) => res.status(201).send(user))
     .catch(next);
 };
 

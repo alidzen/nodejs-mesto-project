@@ -9,7 +9,7 @@ export const createUser = (req: Request, res: Response, next: NextFunction) => {
   }
   User.create({ name, about, avatar })
     .then((user) => {
-      res.send(user);
+      res.status(201).send(user);
     })
     .catch(next);
 };
