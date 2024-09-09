@@ -6,11 +6,12 @@ import cookerParser from 'cookie-parser';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import usersRouter from './routes/users';
+import cardsRouter from './routes/cards';
 import { requestLogger, errorLogger } from './middlewares/logger';
 
 dotenv.config();
 
-const { PORT = 3000, BASE_PATH, DB_URL = '' } = process.env;
+const { PORT = 3000, DB_URL = '' } = process.env;
 const app = express();
 
 app.use(express.json());
@@ -30,6 +31,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 app.use('/users', usersRouter);
+app.use('/cards', cardsRouter);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -46,5 +48,4 @@ app.use((err: any, _req: Request, res: Response) => {
 
 app.listen(PORT, () => {
   console.log('Ссылка на сервер');
-  console.log(BASE_PATH);
 });

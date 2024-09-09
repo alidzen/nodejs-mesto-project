@@ -1,43 +1,70 @@
-import { Request, Response } from 'express';
-// import bcrypt from 'bcryptjs'; // импортируем bcrypt
+import { NextFunction, Request, Response } from 'express';
 import User from '../models/user';
+import { BadRequestError, NotFoundError } from '../errors';
 
-export const createUser = (req: Request, res: Response) => {
-  // хешируем пароль
-  // bcrypt
-  //   .hash(req.body.password, 10)
-  //   .then((hash) => User.create({
-  //     email: req.body.email,
-  //     password: hash, // записываем хеш в базу
-  //   }))
-  //   .then((user) => res.send(user))
-  //   .catch((err) => res.status(400).send(err));
-
+export const createUser = (req: Request, res: Response, next: NextFunction) => {
   const { name, about, avatar } = req.body;
   User.create({ name, about, avatar })
-    .then((user) => res.send(user))
-    .catch((err) => res.status(400).send(err));
+    .then((user) => {
+      if (!user) {
+        throw new BadRequestError('Не удалось создать пользователя');
+      }
+      res.send(user);
+    })
+    .catch(next);
 };
 
-export const getUsers = (_req: Request, res: Response) => {
+export const getUsers = (_req: Request, res: Response, next: NextFunction) => {
   User
     .find({})
     .then((users) => {
       res.send({ data: users });
     })
-    .catch((err) => {
-      res.status(404).send({ message: err });
-    });
+    .catch(next);
 };
 
-export const getUser = (req: Request, res: Response) => {
+export const getUser = (req: Request, res: Response, next: NextFunction) => {
   const { id } = req.params;
   User
     .findById(id)
     .then((user) => {
+      if (!user) {
+        throw new NotFoundError('Пользователь с таким id не найден');
+      }
       res.send({ data: user });
     })
-    .catch((err) => {
-      res.status(404).send({ message: err });
-    });
+    .catch(next);
+};
+
+type params = {
+  name?: string;
+  about?: string;
+}
+
+export const updateProfile = (req: Request, res: Response, next: NextFunction) => {
+  const { id } = req.params;
+  const { name, about } = req.body;
+  const fields: params = {};
+  if (name) {
+    fields.name = name;
+  }
+
+  if (about) {
+    fields.about = about;
+  }
+
+  return User.findByIdAndUpdate(id, { ...fields }).then((user) => {
+    res.send({ data: user });
+  }).catch(next);
+};
+
+export const updateAvatar = (req: Request, res: Response, next: NextFunction) => {
+  const { id } = req.params;
+  const { avatar } = req.body;
+
+  if (!avatar) {
+    next(new BadRequestError('Пустое или невалидное значение поля avatar'));
+  }
+
+  return User.findByIdAndUpdate(id, { avatar }).then((user) => res.send({ data: user }));
 };
