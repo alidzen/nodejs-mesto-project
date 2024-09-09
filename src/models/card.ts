@@ -24,6 +24,9 @@ const cardSchema = new Schema({
   },
   createdAt: {
     type: Date,
+    // Код ревью: все так, мы передаем функцию, которая будет вызвана в момент создания карточки
+    // А не в момент инициализации модели
+    // Подробнее: https://stackoverflow.com/questions/35501273/what-is-the-difference-between-date-now-and-date-now-in-mongoose
     default: Date.now,
   },
 });
