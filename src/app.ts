@@ -39,17 +39,17 @@ app.use(handleUnhanledRequests);
 app.use(errorLogger);
 app.use(errors());
 
-
 app.use(
-  (err: Error & { statusCode: number }, req: Request, res: Response, _next: NextFunction) => {
+  (
+    err: Error & { statusCode: number },
+    req: Request,
+    res: Response,
+    _next: NextFunction,
+  ) => {
     const { statusCode = 500, message } = err;
-    res
-      .status(statusCode)
-      .send({
-        message: statusCode === 500
-          ? 'На сервере произошла ошибка'
-          : message,
-      });
+    res.status(statusCode).send({
+      message: statusCode === 500 ? 'На сервере произошла ошибка' : message,
+    });
   },
 );
 
