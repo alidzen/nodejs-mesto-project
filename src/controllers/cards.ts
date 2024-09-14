@@ -8,26 +8,24 @@ export const createCard = (req: Request, res: Response, next: NextFunction) => {
   if (!name || !link || !id) {
     throw new BadRequestError('Переданы некорректные данные при создании карточки.');
   }
-  Card.create({ owner: id, name, link })
+  return Card.create({ owner: id, name, link })
     .then((user) => res.status(201).send(user))
     .catch(next);
 };
 
-export const getCards = (_req: Request, res: Response, next: NextFunction) => {
-  Card
-    .find({})
-    .then((cards) => {
-      res.send({ data: cards });
-    })
-    .catch(next);
-};
+export const getCards = (_req: Request, res: Response, next: NextFunction) => Card
+  .find({})
+  .then((cards) => {
+    res.send({ data: cards });
+  })
+  .catch(next);
 
 export const deleteCard = (req: Request, res: Response, next: NextFunction) => {
   const { cardId } = req.params;
   if (!cardId) {
     throw new BadRequestError('Карточка с указанным _id не найдена.');
   }
-  Card
+  return Card
     .deleteOne({ _id: cardId })
     .then((card) => {
       res.send({ data: card });
@@ -40,7 +38,7 @@ export const likeCard = (req: Request, res: Response, next: NextFunction) => {
   if (!cardId) {
     next(new BadRequestError('Переданы некорректные данные для постановки лайка.'));
   }
-  Card.findByIdAndUpdate(
+  return Card.findByIdAndUpdate(
     cardId,
     { $addToSet: { likes: req.user._id } },
     { new: true },
@@ -59,7 +57,7 @@ export const dislikeCard = (req: Request, res: Response, next: NextFunction) => 
   if (!cardId) {
     next(new BadRequestError('Переданы некорректные данные для снятии лайка.'));
   }
-  Card
+  return Card
     .findByIdAndUpdate(
       cardId,
       { $pull: { likes: req.user._id } }, // убрать _id из массива

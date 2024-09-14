@@ -1,20 +1,29 @@
 import { NextFunction, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import isEmail from 'validator/lib/isEmail';
 import User from '../models/user';
 import { BadRequestError, NotFoundError } from '../errors';
 
-const { JWT_SECRET = '' } = process.env;
+dotenv.config();
+
+const {
+  JWT_SECRET = '', NODE_ENV,
+} = process.env;
 
 export const login = (req: Request, res: Response, next: NextFunction) => {
   const { email, password } = req.body;
 
-  User.findOne({ email })
+  return User.findOne({ email })
     .then(async (user) => {
       if (!user) {
         throw new NotFoundError('Неправильные почта или пароль');
+      }
+
+      if (!isEmail(email)) {
+        throw next(new BadRequestError('Переданы некорректный email.'));
       }
 
       const matched = await bcrypt.compare(password, user.password);
@@ -22,7 +31,13 @@ export const login = (req: Request, res: Response, next: NextFunction) => {
         throw new NotFoundError('Неправильные почта или пароль');
       }
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
-      res.send({ token });
+
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: NODE_ENV === 'production',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+      res.send({ message: 'Авторизация прошла успешно' });
     })
     .catch(next);
 };
@@ -33,20 +48,20 @@ export const createUser = (req: Request, res: Response, next: NextFunction) => {
   } = req.body;
 
   if (!isEmail(email)) {
-    next(new BadRequestError('Переданы некорректный email.'));
+    throw next(new BadRequestError('Переданы некорректный email.'));
   }
 
   bcrypt
     .hash(password, 10)
-    .then((hash) => {
-      User.create({
-        name, about, avatar, password: hash, email,
-      })
-        .then((user) => {
-          res.status(201).send(user);
-        });
+    .then((hash) => User.create({
+      name, about, avatar, password: hash, email,
     })
-    .catch(next);
+      .then((user) => {
+        res.status(201).send(user);
+      }))
+    .catch((e) => {
+      next(e);
+    });
 };
 
 export const getUsers = (_req: Request, res: Response, next: NextFunction) => {
@@ -59,9 +74,9 @@ export const getUsers = (_req: Request, res: Response, next: NextFunction) => {
 };
 
 export const getUser = (req: Request, res: Response, next: NextFunction) => {
-  const { id } = req.params;
-  User
-    .findOne({ _id: id })
+  const { _id } = req.user;
+  return User
+    .findOne({ _id })
     .then((user) => {
       if (!user) {
         throw new NotFoundError('Пользователь по указанному _id не найден.');
@@ -72,13 +87,13 @@ export const getUser = (req: Request, res: Response, next: NextFunction) => {
 };
 
 export const updateProfile = (req: Request, res: Response, next: NextFunction) => {
-  const id = req.user._id;
+  const { _id } = req.user;
   const { name, about } = req.body;
   if (!name || !about) {
     next(new BadRequestError('Переданы некорректные данные при обновлении профиля.'));
   }
 
-  return User.findOneAndUpdate({ _id: id }, { name, about }, { new: true }).then((user) => {
+  return User.findOneAndUpdate({ _id }, { name, about }, { new: true }).then((user) => {
     if (!user) {
       throw new NotFoundError('Пользователь с указанным _id не найден.');
     }
@@ -87,7 +102,8 @@ export const updateProfile = (req: Request, res: Response, next: NextFunction) =
 };
 
 export const updateAvatar = (req: Request, res: Response, next: NextFunction) => {
-  const id = req.user._id;
+  const { _id } = req.user;
+
   const { avatar } = req.body;
 
   if (!avatar) {
@@ -95,7 +111,7 @@ export const updateAvatar = (req: Request, res: Response, next: NextFunction) =>
   }
 
   return User
-    .findOneAndUpdate({ _id: id }, { avatar }, { new: true })
+    .findOneAndUpdate({ _id }, { avatar }, { new: true })
     .then((user) => {
       if (!user) {
         throw new NotFoundError('Пользователь с указанным _id не найден.');

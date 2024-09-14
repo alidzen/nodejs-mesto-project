@@ -1,6 +1,8 @@
 import path from 'path';
 import express, { Response, Request, NextFunction } from 'express';
-import { errors } from 'celebrate';
+import {
+  celebrate, errors, Joi, Segments,
+} from 'celebrate';
 import mongoose from 'mongoose';
 import cookerParser from 'cookie-parser';
 import helmet from 'helmet';
@@ -9,6 +11,8 @@ import usersRouter from './routes/users';
 import cardsRouter from './routes/cards';
 import { requestLogger, errorLogger } from './middlewares/logger';
 import handleUnhanledRequests from './middlewares/not-found';
+import { createUser, login } from './controllers/users';
+import auth from './middlewares/auth';
 
 dotenv.config();
 
@@ -23,13 +27,25 @@ app.use(helmet());
 mongoose.connect(DB_URL);
 
 app.use(requestLogger);
-app.use((req: Request, res: Response, next: NextFunction) => {
-  req.user = {
-    _id: '66dd5e34acdb9b0d445f85b9',
-  };
 
-  next();
-});
+app.post('/signup', celebrate({
+  [Segments.BODY]: Joi.object().keys({
+    email: Joi.string().required(),
+    password: Joi.string().required(),
+    name: Joi.string(),
+    avatar: Joi.string(),
+    about: Joi.string(),
+  }),
+}), createUser);
+
+app.post('/signin', celebrate({
+  [Segments.BODY]: Joi.object().keys({
+    email: Joi.string().required(),
+    password: Joi.string().required(),
+  }),
+}), login);
+
+app.use(auth);
 app.use('/users', usersRouter);
 app.use('/cards', cardsRouter);
 

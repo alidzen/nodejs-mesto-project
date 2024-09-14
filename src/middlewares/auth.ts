@@ -3,23 +3,20 @@ import jwt from 'jsonwebtoken';
 import { UnauthorizedError } from '../errors';
 
 const { JWT_SECRET = '' } = process.env;
-const authPrefix = 'Bearer ';
 
 export default (req: Request, _res: Response, next: NextFunction) => {
-  const { authorization } = req.header;
+  const { token } = req.cookies;
 
-  if (!authorization || !authorization.startsWith(authPrefix)) {
+  if (!token) {
     next(new UnauthorizedError('Необходима авторизация'));
+    return;
   }
 
-  const token = authorization.replace(authPrefix, '');
-  let payload;
   try {
-    payload = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded as { _id: string };
+    next();
   } catch (_err) {
     next(new UnauthorizedError('Необходима авторизация'));
   }
-
-  req.user = payload as string;
-  next();
 };
