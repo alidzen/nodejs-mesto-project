@@ -3,12 +3,12 @@ import Card from '../models/card';
 import { BadRequestError, NotFoundError } from '../errors';
 
 export const createCard = (req: Request, res: Response, next: NextFunction) => {
-  const id = req.user._id;
+  const { _id } = req.user;
   const { name, link } = req.body;
-  if (!name || !link || !id) {
+  if (!name || !link) {
     throw new BadRequestError('Переданы некорректные данные при создании карточки.');
   }
-  return Card.create({ owner: id, name, link })
+  return Card.create({ owner: _id, name, link })
     .then((user) => res.status(201).send(user))
     .catch(next);
 };
@@ -23,7 +23,7 @@ export const getCards = (_req: Request, res: Response, next: NextFunction) => Ca
 export const deleteCard = (req: Request, res: Response, next: NextFunction) => {
   const { cardId } = req.params;
   if (!cardId) {
-    throw new BadRequestError('Карточка с указанным _id не найдена.');
+    throw new BadRequestError('Карточка с указанным id не найдена.');
   }
   return Card
     .deleteOne({ _id: cardId })
@@ -60,7 +60,7 @@ export const dislikeCard = (req: Request, res: Response, next: NextFunction) => 
   return Card
     .findByIdAndUpdate(
       cardId,
-      { $pull: { likes: req.user._id } }, // убрать _id из массива
+      { $pull: { likes: req.user._id } },
       { new: true },
     )
     .then((card) => {

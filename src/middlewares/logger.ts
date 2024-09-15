@@ -10,10 +10,21 @@ export const requestLogger = expressWinston.logger({
       filename: 'request.log',
     }),
   ],
+  statusLevels: true,
+  colorize: true,
   format: winston.format.json(),
 });
 
 export const errorLogger = expressWinston.logger({
-  transports: [new winston.transports.File({ filename: 'error.log' })],
+  transports: [
+    new winston.transports.Console({
+      format: winston.format.simple(),
+    }),
+    new winston.transports.File({
+      filename: 'error.log',
+    }),
+  ],
+  statusLevels: true,
+  colorize: true,
   format: winston.format.json(),
 });

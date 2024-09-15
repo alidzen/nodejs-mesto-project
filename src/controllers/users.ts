@@ -5,9 +5,13 @@ import dotenv from 'dotenv';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import isEmail from 'validator/lib/isEmail';
 import User from '../models/user';
-import { BadRequestError, NotFoundError } from '../errors';
+import { BadRequestError, ConflictError, NotFoundError } from '../errors';
 
 dotenv.config();
+
+const MongooseError = {
+  NotUniqObject: 11000,
+};
 
 const {
   JWT_SECRET = '', NODE_ENV,
@@ -16,7 +20,9 @@ const {
 export const login = (req: Request, res: Response, next: NextFunction) => {
   const { email, password } = req.body;
 
-  return User.findOne({ email })
+  return User
+    .findOne({ email })
+    .select('+password')
     .then(async (user) => {
       if (!user) {
         throw new NotFoundError('Неправильные почта или пароль');
@@ -37,7 +43,7 @@ export const login = (req: Request, res: Response, next: NextFunction) => {
         secure: NODE_ENV === 'production',
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
-      res.send({ message: 'Авторизация прошла успешно' });
+      res.send({ message: 'Авторизация прошла успешно', user });
     })
     .catch(next);
 };
@@ -47,9 +53,9 @@ export const createUser = (req: Request, res: Response, next: NextFunction) => {
     name, about, avatar, password, email,
   } = req.body;
 
-  if (!isEmail(email)) {
-    throw next(new BadRequestError('Переданы некорректный email.'));
-  }
+  // if (!isEmail(email)) {
+  //   throw next(new BadRequestError('Переданы некорректный email.'));
+  // }
 
   bcrypt
     .hash(password, 10)
@@ -60,7 +66,10 @@ export const createUser = (req: Request, res: Response, next: NextFunction) => {
         res.status(201).send(user);
       }))
     .catch((e) => {
-      next(e);
+      if (e.code === MongooseError.NotUniqObject) {
+        return next(new ConflictError('Пользователь с таким email уже существует.'));
+      }
+      return next(e);
     });
 };
 

@@ -1,17 +1,15 @@
 import path from 'path';
 import express, { Response, Request, NextFunction } from 'express';
-import {
-  celebrate, errors, Joi, Segments,
-} from 'celebrate';
+import { errors } from 'celebrate';
 import mongoose from 'mongoose';
 import cookerParser from 'cookie-parser';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import usersRouter from './routes/users';
 import cardsRouter from './routes/cards';
+import authRouter from './routes/auth';
 import { requestLogger, errorLogger } from './middlewares/logger';
 import handleUnhanledRequests from './middlewares/not-found';
-import { createUser, login } from './controllers/users';
 import auth from './middlewares/auth';
 
 dotenv.config();
@@ -27,24 +25,7 @@ app.use(helmet());
 mongoose.connect(DB_URL);
 
 app.use(requestLogger);
-
-app.post('/signup', celebrate({
-  [Segments.BODY]: Joi.object().keys({
-    email: Joi.string().required(),
-    password: Joi.string().required(),
-    name: Joi.string(),
-    avatar: Joi.string(),
-    about: Joi.string(),
-  }),
-}), createUser);
-
-app.post('/signin', celebrate({
-  [Segments.BODY]: Joi.object().keys({
-    email: Joi.string().required(),
-    password: Joi.string().required(),
-  }),
-}), login);
-
+app.use(authRouter);
 app.use(auth);
 app.use('/users', usersRouter);
 app.use('/cards', cardsRouter);
