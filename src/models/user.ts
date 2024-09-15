@@ -1,10 +1,18 @@
-import mongoose, { Schema, Error } from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 import isEmail from 'validator/lib/isEmail';
 import isEmpty from 'validator/lib/isEmpty';
+import { urlRegExp } from './constants';
+import { AppModel } from './types';
 
-const avatarUrlRegExp = /^(https?:\/\/)(www\.)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]*)?(#)?$/;
+interface IUser extends Document {
+  email: string;
+  password: string;
+  name: string;
+  about: string;
+  avatar: string;
+}
 
-const userSchema = new Schema({
+const userSchema = new Schema<IUser>({
   email: {
     type: String,
     required: true,
@@ -17,6 +25,7 @@ const userSchema = new Schema({
   password: {
     type: String,
     required: true,
+    minlength: 8,
     select: false,
   },
   name: {
@@ -42,11 +51,11 @@ const userSchema = new Schema({
         if (typeof value !== 'string') {
           return false;
         }
-        return avatarUrlRegExp.test(value);
+        return urlRegExp.test(value);
       },
-      message: (props: Error.ValidatorError) => `Передан некорректный url для avatar ${props.value}.`,
+      message: (props) => `Передан некорректный url для avatar ${props.value}.`,
     },
   },
 });
 
-export default mongoose.model('user', userSchema);
+export default mongoose.model(AppModel.User, userSchema);

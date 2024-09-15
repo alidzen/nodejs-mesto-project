@@ -1,13 +1,10 @@
 import { NextFunction, Request, Response } from 'express';
 import Card from '../models/card';
-import { BadRequestError, NotFoundError } from '../errors';
+import { ForbiddenError, NotFoundError } from '../errors';
 
 export const createCard = (req: Request, res: Response, next: NextFunction) => {
   const { _id } = req.user;
   const { name, link } = req.body;
-  if (!name || !link) {
-    throw new BadRequestError('Переданы некорректные данные при создании карточки.');
-  }
   return Card.create({ owner: _id, name, link })
     .then((user) => res.status(201).send(user))
     .catch(next);
@@ -20,24 +17,29 @@ export const getCards = (_req: Request, res: Response, next: NextFunction) => Ca
   })
   .catch(next);
 
-export const deleteCard = (req: Request, res: Response, next: NextFunction) => {
+export const deleteCard = async (req: Request, res: Response, next: NextFunction) => {
+  const { _id } = req.user;
   const { cardId } = req.params;
-  if (!cardId) {
-    throw new BadRequestError('Карточка с указанным id не найдена.');
+
+  try {
+    const card = await Card.findById(cardId).exec();
+    if (!card) {
+      throw new NotFoundError('Карточка с таким id не найдена');
+    }
+    if (card.owner.toString() !== _id.toString()) {
+      throw new ForbiddenError('Доступ запрещен');
+    }
+
+    await card.deleteOne({ _id: cardId, owner: _id });
+
+    return res.send({ data: card });
+  } catch (err) {
+    return next(err);
   }
-  return Card
-    .deleteOne({ _id: cardId })
-    .then((card) => {
-      res.send({ data: card });
-    })
-    .catch(next);
 };
 
 export const likeCard = (req: Request, res: Response, next: NextFunction) => {
   const { cardId } = req.params;
-  if (!cardId) {
-    next(new BadRequestError('Переданы некорректные данные для постановки лайка.'));
-  }
   return Card.findByIdAndUpdate(
     cardId,
     { $addToSet: { likes: req.user._id } },
@@ -54,9 +56,6 @@ export const likeCard = (req: Request, res: Response, next: NextFunction) => {
 
 export const dislikeCard = (req: Request, res: Response, next: NextFunction) => {
   const { cardId } = req.params;
-  if (!cardId) {
-    next(new BadRequestError('Переданы некорректные данные для снятии лайка.'));
-  }
   return Card
     .findByIdAndUpdate(
       cardId,

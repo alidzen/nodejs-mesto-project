@@ -2,10 +2,11 @@ import { NextFunction, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import isEmail from 'validator/lib/isEmail';
 import User from '../models/user';
-import { BadRequestError, ConflictError, NotFoundError } from '../errors';
+import {
+  BadRequestError, ConflictError, NotFoundError, UnauthorizedError,
+} from '../errors';
 
 dotenv.config();
 
@@ -25,7 +26,7 @@ export const login = (req: Request, res: Response, next: NextFunction) => {
     .select('+password')
     .then(async (user) => {
       if (!user) {
-        throw new NotFoundError('Неправильные почта или пароль');
+        throw new UnauthorizedError('Неправильные почта или пароль');
       }
 
       if (!isEmail(email)) {
@@ -34,7 +35,7 @@ export const login = (req: Request, res: Response, next: NextFunction) => {
 
       const matched = await bcrypt.compare(password, user.password);
       if (!matched) {
-        throw new NotFoundError('Неправильные почта или пароль');
+        throw new UnauthorizedError('Неправильные почта или пароль');
       }
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
 
@@ -52,10 +53,6 @@ export const createUser = (req: Request, res: Response, next: NextFunction) => {
   const {
     name, about, avatar, password, email,
   } = req.body;
-
-  // if (!isEmail(email)) {
-  //   throw next(new BadRequestError('Переданы некорректный email.'));
-  // }
 
   bcrypt
     .hash(password, 10)
@@ -112,12 +109,7 @@ export const updateProfile = (req: Request, res: Response, next: NextFunction) =
 
 export const updateAvatar = (req: Request, res: Response, next: NextFunction) => {
   const { _id } = req.user;
-
   const { avatar } = req.body;
-
-  if (!avatar) {
-    next(new BadRequestError('Переданы некорректные данные при обновлении аватара.'));
-  }
 
   return User
     .findOneAndUpdate({ _id }, { avatar }, { new: true })
@@ -126,5 +118,5 @@ export const updateAvatar = (req: Request, res: Response, next: NextFunction) =>
         throw new NotFoundError('Пользователь с указанным _id не найден.');
       }
       res.send({ data: user });
-    });
+    }).catch(next);
 };
