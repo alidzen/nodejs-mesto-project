@@ -56,6 +56,14 @@ const userSchema = new Schema<IUser>({
       message: (props) => `Передан некорректный url для avatar ${props.value}.`,
     },
   },
+}, {
+  toJSON: {
+    transform(_doc, ret) {
+      const noPassCopy = { ...ret };
+      delete noPassCopy.password;
+      return noPassCopy;
+    },
+  },
 });
 
 export default mongoose.model(AppModel.User, userSchema);
